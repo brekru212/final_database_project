@@ -24,10 +24,10 @@ DROP TABLE IF EXISTS `FoundInfo`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `FoundInfo` (
   `TICKER` varchar(45) NOT NULL,
-  `LastUpdate` datetime NOT NULL,
   `LastPrice` float DEFAULT NULL,
   `SOURCE` varchar(45) DEFAULT NULL,
-  `DatePutIntoDB` datetime DEFAULT NULL,
+  `DateAdded` datetime DEFAULT NULL,
+  `DateModified` datetime NOT NULL,
   PRIMARY KEY (`TICKER`),
   UNIQUE KEY `TICKER_UNIQUE` (`TICKER`),
   UNIQUE KEY `LastUpdate_UNIQUE` (`LastUpdate`)
