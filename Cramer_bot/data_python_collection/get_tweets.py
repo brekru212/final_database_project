@@ -6,10 +6,10 @@ import time
 #from Cramer_bot.get_stocks import json_stock_info
 
 
-consumer_key = '1R44siZpuxAEItrLGIKYp8Uvm'
-consumer_secret = 'X5C4X9FPFygKXA8ATgu337mwUSa7vAtj6Q5eapTSA9K3gJ2yRb'
-access_token = '706564673349427201-WjPUbv8NbqPbngJ12LmxsB7CA55st3x'
-access_secret = 'NLWAqkmy8GOaK6SkvGPVM3y0oSEsqs4lCfGPT5qg3Bw29'
+consumer_key = 'nope'
+consumer_secret = 'nope'
+access_token = 'nope'
+access_secret = 'nope'
 
 auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
