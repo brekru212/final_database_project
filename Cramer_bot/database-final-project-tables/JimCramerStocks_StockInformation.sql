@@ -26,7 +26,7 @@ CREATE TABLE `StockInformation` (
   `TICKER` varchar(45) DEFAULT NULL,
   `LastPrice` float DEFAULT NULL,
   `TimesMentioned` bigint(21) DEFAULT NULL,
-  `LastUpdate` datetime DEFAULT NULL
+  `DateModified` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
