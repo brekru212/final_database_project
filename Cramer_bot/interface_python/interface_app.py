@@ -6,6 +6,7 @@
 import read
 import user_create
 import delate
+import update
 
 from Tkinter import *
 
@@ -56,7 +57,7 @@ class ListBoxChoice(object):
         createButton = Button(buttonFrame, text="Create", command=self._create)
         createButton.pack()
 
-        modifyButton = Button(buttonFrame, text="Modify", command=self._cancel)
+        modifyButton = Button(buttonFrame, text="Modify", command=self._modify)
         modifyButton.pack()
 
         delButton = Button(buttonFrame, text="Delete", command=self._deleteStock)
@@ -67,15 +68,14 @@ class ListBoxChoice(object):
 
 
     def _choose(self, event=None):
-        try:
-            self.changingFame.pack_forget()
-            firstIndex = self.listBox.curselection()[0]
-            self.value = self.list[int(firstIndex)]
-            self.text = read.all_stock_into(self.value)
-            self.changingFame = Label(self.modalPane, text=self.text)
-            self.changingFame.pack(side=RIGHT)
-        except IndexError:
-            self.value = None
+
+        self.changingFame.pack_forget()
+        firstIndex = self.listBox.curselection()[0]
+        self.value = self.list[int(firstIndex)]
+        self.text = read.all_stock_into(self.value)
+        self.changingFame = Label(self.modalPane, text=self.text)
+        self.changingFame.pack()
+
 
     def _create(self, event=None):
         self.changingFame.pack_forget()
@@ -122,6 +122,22 @@ class ListBoxChoice(object):
         for item in self.list:
             self.listBox.insert(END, item)
 
+
+    def _modify(self, event=None):
+        self.changingFame.pack_forget()
+        firstIndex = self.listBox.curselection()[0]
+        self.value = self.list[int(firstIndex)]
+        price = StringVar()
+        Label(self.changingFame, text="Price").grid(row=1)
+        self.priceChange = Entry(self.changingFame, textvariable=price)
+        self.priceChange.grid(row=1, column=1)
+        insertButton = Button(self.changingFame, text="Update",command=self.changeEntry)
+        insertButton.grid(row=2, column=1)
+        self.changingFame.pack()
+
+    def changeEntry(self):
+        if self.priceChange.get():
+            update.user_update(ticker=self.value,price=float(self.priceChange.get()))
 
 
     def returnValue(self):
