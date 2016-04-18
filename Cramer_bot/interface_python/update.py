@@ -1,4 +1,6 @@
 
+import populate_stockperformance as dpc
+
 from sqlalchemy import *
 
 username = "nope"
@@ -17,6 +19,54 @@ conn = create_engine('mysql://{0[userName]}:{0[password]}@{0[serverName]}:{0[por
 # Connect to the database
 
 #auto is user puts in a ticker and it automatically updates across
+def auto_update():
+    conn.execute("""INSERT INTO StockInformation(TICKER, LastPrice, TimesMentioned, LastUpdate)
+    select distinct(re.ticker) as TICKER, Price as LastPrice, count(ticker) as coun, max(Dates) as LastUpdate
+    From ReporterEntries as re
+    right outer join
+(select distinct(ticker) as tick, count(ticker) as coun, max(dates) as da
+from ReporterEntries
+group by tick) as a
+on re.dates = a.da and a.coun = coun
+where a.da is not null
+group by re.ticker, re.price
+ON DUPLICATE KEY UPDATE
+    LastPrice = LastPrice,
+    LastUpdate = LastUpdate,
+    TimesMentioned = (StockInformation.TimesMentioned + 1);
+    """)
+
+    conn.execute("""
+insert into FoundInfo
+SELECT
+    SI.TICKER AS TICKER,
+
+    SI.LastPrice AS LastPrice,
+    sou.source as SOURCE,
+    min(re.da) AS DateAdded,
+    SI.LastUpdate AS DateModified
+FROM
+    StockInformation AS SI
+        LEFT OUTER JOIN
+    (SELECT DISTINCT
+        (ticker) AS tick, MIN(dates) AS da
+    FROM
+        ReporterEntries
+    GROUP BY ReporterEntries.TICKER) AS re ON SI.TICKER = re.tick
+        LEFT OUTER JOIN
+    (SELECT DISTINCT
+        (ticker) AS tick, source, MAX(dates) AS da
+    FROM
+        ReporterEntries
+    GROUP BY tick, source) AS sou ON SI.ticker = sou.tick and SI.LastUpdate = sou.da
+GROUP BY SI.TICKER , SI.LastUpdate , SI.LastPrice ,sou.source, re.da
+ON DUPLICATE KEY UPDATE
+    LastPrice = LastPrice,
+    SOURCE = SOURCE,
+    DateModified = DateModified;
+    """)
+    dpc.update_StockPerformance()
+
 
 
 

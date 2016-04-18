@@ -60,6 +60,9 @@ class ListBoxChoice(object):
         modifyButton = Button(buttonFrame, text="Modify", command=self._modify)
         modifyButton.pack()
 
+        autoButton = Button(buttonFrame, text="Auto Update",command=self.autoChangeEntry)
+        autoButton.pack()
+
         delButton = Button(buttonFrame, text="Delete", command=self._deleteStock)
         delButton.pack()
 
@@ -133,12 +136,15 @@ class ListBoxChoice(object):
         self.priceChange.grid(row=1, column=1)
         insertButton = Button(self.changingFame, text="Update",command=self.changeEntry)
         insertButton.grid(row=2, column=1)
+
         self.changingFame.pack()
 
     def changeEntry(self):
         if self.priceChange.get():
             update.user_update(ticker=self.value,price=float(self.priceChange.get()))
 
+    def autoChangeEntry(self):
+        update.auto_update()
 
     def returnValue(self):
        return self.master.wait_window(self.modalPane)
