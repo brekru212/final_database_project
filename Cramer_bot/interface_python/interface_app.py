@@ -1,8 +1,4 @@
 
-
-# First create application class
-# built off of http://code.activestate.com/recipes/578860-setting-up-a-listbox-filter-in-tkinterpython-27/
-
 import read
 import user_create
 import delate
@@ -14,7 +10,7 @@ class ListBoxChoice(object):
     def __init__(self, master=None, title=None, message=None, list=[]):
         self.master = master
         self.value = None
-        self.text = None
+        self.text = 'Interact with any of the options below'
         self.list = read.getTickerList()
 
         self.modalPane = Toplevel(self.master)
@@ -31,22 +27,11 @@ class ListBoxChoice(object):
         if message:
             Label(self.modalPane, text=message).pack(padx=5, pady=5)
 
-        self.listFrame = Frame(self.modalPane)
-        self.listFrame.pack(side=TOP, padx=5, pady=5)
+        self.resetlist()
 
-        self.scrollBar = Scrollbar(self.listFrame)
-        self.scrollBar.pack(side=LEFT, fill=Y)
-        self.listBox = Listbox(self.listFrame, selectmode=SINGLE)
-        self.listBox.pack(side=LEFT, fill=Y)
-        self.scrollBar.config(command=self.listBox.yview)
-        self.listBox.config(yscrollcommand=self.scrollBar.set)
-        self.list.sort()
-        for item in self.list:
-            self.listBox.insert(END, item)
+        self.changingFame = Frame(self.modalPane)
+        self.changingFame.pack(expand=TRUE)
 
-        interactiveFrame = Label(self.modalPane, text=self.text)
-        self.changingFame = interactiveFrame
-        interactiveFrame.pack(side=RIGHT)
 
         buttonFrame = Frame(self.modalPane)
         buttonFrame.pack(side=BOTTOM)
@@ -70,33 +55,57 @@ class ListBoxChoice(object):
         cancelButton.pack()
 
 
-    def _choose(self, event=None):
+    def resetlist(self):
+        self.listFrame = Frame(self.modalPane)
+        self.listFrame.pack(side=TOP)
 
-        self.changingFame.pack_forget()
-        firstIndex = self.listBox.curselection()[0]
-        self.value = self.list[int(firstIndex)]
-        self.text = read.all_stock_into(self.value)
-        self.changingFame = Label(self.modalPane, text=self.text)
-        self.changingFame.pack()
+        self.scrollBar = Scrollbar(self.listFrame)
+        self.scrollBar.pack(side=LEFT, fill=Y)
+        self.listBox = Listbox(self.listFrame, selectmode=SINGLE)
+        self.listBox.pack(side=LEFT, fill=Y)
+        self.scrollBar.config(command=self.listBox.yview)
+        self.listBox.config(yscrollcommand=self.scrollBar.set)
+        self.list.sort()
+        for item in self.list:
+            self.listBox.insert(END, item)
+
+    def cleanFrame(self):
+        try:
+            self.changingFame.pack_forget()
+            self.changingFame = Frame(self.modalPane)
+            self.changingFame.pack(expand=TRUE)
+        except:
+            pass
+
+    def _choose(self, event=None):
+        try:
+            self.cleanFrame()
+            firstIndex = self.listBox.curselection()[0]
+            self.value = self.list[int(firstIndex)]
+            self.text = read.all_stock_into(self.value)
+            self.changingText = Label(self.changingFame, text=self.text)
+            self.changingText.pack(in_=self.changingFame)
+        except IndexError:
+            self.value = None
 
 
     def _create(self, event=None):
-        self.changingFame.pack_forget()
+        self.cleanFrame()
         ticker = StringVar()
         price = StringVar()
-        Label(self.changingFame, text="Ticker").grid(row=0)
-        Label(self.changingFame, text="Price").grid(row=1)
+        self.tickerLabel = Label(self.changingFame, text="Ticker")
+        self.tickerLabel.grid(row=0)
+        self.priceLabel  = Label(self.changingFame, text="Price")
+        self.priceLabel.grid(row=1)
         self.tickerEntry = Entry(self.changingFame, textvariable=ticker)
         self.tickerEntry.grid(row=0, column=1)
         self.priceEntry = Entry(self.changingFame, textvariable=price)
         self.priceEntry.grid(row=1, column=1)
-        insertButton = Button(self.changingFame, text="Insert",command=self.createEntry)
-
-                           #   command=user_create.user_create(ticker=tickerEntry.get(),price=priceEntry.get()))
-        insertButton.grid(row=2, column=1)
-        self.changingFame.pack()
+        self.insertButton = Button(self.changingFame, text="Insert", command=self.createEntry)
+        self.insertButton.grid(row=2, column=1)
 
     def createEntry(self):
+        self.cleanFrame()
         if self.tickerEntry.get() and self.priceEntry.get():
             user_create.user_create(ticker=self.tickerEntry.get(),price=self.priceEntry.get())
             self.list.append(self.tickerEntry.get())
@@ -107,44 +116,44 @@ class ListBoxChoice(object):
 
 
     def _deleteStock(self):
-        self.changingFame.pack_forget()
+        self.cleanFrame()
+        #self.changingText.pack_forget()
         firstIndex = self.listBox.curselection()[0]
         self.value = self.list[int(firstIndex)]
         val1 = self.value
         self.list.remove(val1)
         delate.user_delete(val1)
-
-
         self.listFrame.pack_forget()
-        self.listFrame = Frame(self.modalPane)
-        self.listFrame.pack(side=TOP, padx=5, pady=5)
-        self.listBox = Listbox(self.listFrame, selectmode=SINGLE)
-        self.listBox.pack(side=LEFT, fill=Y)
-        self.listBox.config(yscrollcommand=self.scrollBar.set)
-        self.list.sort()
-        for item in self.list:
-            self.listBox.insert(END, item)
+        self.resetlist()
 
 
     def _modify(self, event=None):
-        self.changingFame.pack_forget()
-        firstIndex = self.listBox.curselection()[0]
-        self.value = self.list[int(firstIndex)]
-        price = StringVar()
-        Label(self.changingFame, text="Price").grid(row=1)
-        self.priceChange = Entry(self.changingFame, textvariable=price)
-        self.priceChange.grid(row=1, column=1)
-        insertButton = Button(self.changingFame, text="Update",command=self.changeEntry)
-        insertButton.grid(row=2, column=1)
+        try:
+            self.cleanFrame()
+            firstIndex = self.listBox.curselection()[0]
+            self.value = self.list[int(firstIndex)]
+            price = StringVar()
+            self.priceLabel  = Label(self.changingFame, text="Price")
+            self.priceLabel.grid(row=0)
+            self.priceChange = Entry(self.changingFame, textvariable=price)
+            self.priceChange.grid(row=0, column=1)
+            self.insertButton = Button(self.changingFame, text="Update",command=self.changeEntry)
+            self.insertButton.grid(row=1, column=1)
+        except IndexError:
+            self.value = None
 
-        self.changingFame.pack()
+
 
     def changeEntry(self):
+        self.cleanFrame()
         if self.priceChange.get():
             update.user_update(ticker=self.value,price=float(self.priceChange.get()))
 
     def autoChangeEntry(self):
+        self.cleanFrame()
         update.auto_update()
+        self.listFrame.pack_forget()
+        self.resetlist()
 
     def returnValue(self):
        return self.master.wait_window(self.modalPane)
