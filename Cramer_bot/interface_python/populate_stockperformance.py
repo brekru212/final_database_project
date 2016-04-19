@@ -42,11 +42,11 @@ tableN = create_table('StockPerformance')
 
 def update_StockPerformance():
     # Select data from the table
-    select_string = "SELECT TICKER, LastPrice, TimesMentioned, LastUpdate FROM {}".format(tableName)
-    for (TICKER, LastPrice, TimesMentioned, LastUpdate) in conn.execute(select_string):
+    select_string = "SELECT TICKER, LastPrice, TimesMentioned, DateModified FROM {}".format(tableName)
+    for (TICKER, LastPrice, TimesMentioned, DateModified) in conn.execute(select_string):
         yahooStock = yahoo_finance.Share(TICKER[1:])
         currprice = yahooStock.get_price()
-        timediff = datetime.datetime.now() - LastUpdate
+        timediff = datetime.datetime.now() - DateModified
         if currprice:
             price = float(currprice) - LastPrice
         else:
