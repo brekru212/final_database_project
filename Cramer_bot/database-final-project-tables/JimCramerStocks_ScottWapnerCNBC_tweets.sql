@@ -1,3 +1,5 @@
+CREATE DATABASE  IF NOT EXISTS `JimCramerStocks` /*!40100 DEFAULT CHARACTER SET latin1 */;
+USE `JimCramerStocks`;
 -- MySQL dump 10.13  Distrib 5.7.9, for osx10.9 (x86_64)
 --
 -- Host: 127.0.0.1    Database: JimCramerStocks
@@ -50,4 +52,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-04-16 12:51:28
+-- Dump completed on 2016-04-18 21:15:08
