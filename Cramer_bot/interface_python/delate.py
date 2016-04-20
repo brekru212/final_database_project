@@ -1,10 +1,6 @@
-
+#user enters ticker and it deletes any reference from across all fields
 
 #user enters source and it deletes across all fields
-
-
-
-#user enters ticker and it deletes any reference from across all fields
 from sqlalchemy import *
 
 username = "nope"
@@ -23,8 +19,7 @@ conn = create_engine('mysql://{0[userName]}:{0[password]}@{0[serverName]}:{0[por
 
 
 def user_delete(ticker):
-	conn.execute("DELETE FROM FoundInfo WHERE ticker = (%s)", ticker)
 	conn.execute("DELETE FROM StockInformation WHERE ticker = (%s)", ticker)
-	conn.execute("DELETE FROM StockPerformance WHERE ticker = (%s)", ticker)
 
 
+#user_delete('test')

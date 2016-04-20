@@ -76,12 +76,11 @@ def user_update(ticker, price):
         lPrice = str(pr)[1:-2]
 
     priceDiff = price - float(lPrice)
-    conn.execute("UPDATE FoundInfo SET FoundInfo.LastPrice = (%s), FoundInfo.Source = (%s), "
-                 "DateModified = now() WHERE FoundInfo.TICKER = (%s)", price, 'User Input', ticker)
     conn.execute("UPDATE StockInformation SET StockInformation.lastPrice = (%s), "
                  "StockInformation.timesMentioned = StockInformation.timesMentioned+1, "
-                 "DateModified = now() WHERE StockInformation.ticker = (%s)", price ,ticker)
-    conn.execute("UPDATE StockPerformance SET StockPerformance.priceDifference = (%s), "
-                 "StockPerformance.days = 0 WHERE StockPerformance.ticker = (%s)", priceDiff ,ticker)
+                 "LastUpdate = now() WHERE StockInformation.ticker = (%s)", price ,ticker)
+    conn.execute("UPDATE StockPerformance SET StockPerformance.OverallDifference = (%s), "
+                 "StockPerformance.DaysSinceLastUpdate = 0 WHERE StockPerformance.ticker = (%s)", priceDiff ,ticker)
 
 
+#user_update('test', 20)

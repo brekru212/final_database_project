@@ -10,14 +10,10 @@ class ListBoxChoice(object):
     def __init__(self, master=None, title=None, message=None, list=[]):
         self.master = master
         self.value = None
-        self.text = 'Interact with any of the options below'
-        self.list = read.getTickerList()
 
         self.modalPane = Toplevel(self.master)
-
         self.modalPane.transient(self.master)
         self.modalPane.grab_set()
-
         self.modalPane.bind("<Return>", self._choose)
         self.modalPane.bind("<Escape>", self._cancel)
 
@@ -31,7 +27,6 @@ class ListBoxChoice(object):
 
         self.changingFame = Frame(self.modalPane)
         self.changingFame.pack(expand=TRUE)
-
 
         buttonFrame = Frame(self.modalPane)
         buttonFrame.pack(side=BOTTOM)
@@ -57,15 +52,20 @@ class ListBoxChoice(object):
 
     def resetlist(self):
         self.listFrame = Frame(self.modalPane)
-        self.listFrame.pack(side=TOP)
+        self.listFrame.pack(side=TOP, expand=TRUE, padx=30, pady=30)
 
         self.scrollBar = Scrollbar(self.listFrame)
         self.scrollBar.pack(side=LEFT, fill=Y)
+
         self.listBox = Listbox(self.listFrame, selectmode=SINGLE)
         self.listBox.pack(side=LEFT, fill=Y)
+
         self.scrollBar.config(command=self.listBox.yview)
         self.listBox.config(yscrollcommand=self.scrollBar.set)
+
+        self.list = read.getTickerList()
         self.list.sort()
+
         for item in self.list:
             self.listBox.insert(END, item)
 
@@ -73,7 +73,7 @@ class ListBoxChoice(object):
         try:
             self.changingFame.pack_forget()
             self.changingFame = Frame(self.modalPane)
-            self.changingFame.pack(expand=TRUE)
+            self.changingFame.pack(expand=TRUE, padx=10, pady=10)
         except:
             pass
 
