@@ -18,19 +18,22 @@ conn = create_engine('mysql://{0[userName]}:{0[password]}@{0[serverName]}:{0[por
 
 
 def all_stock_into(ticker):
-    result = conn.execute("SELECT f.LastPrice, f.SOURCE, si.TimesMentioned, sp.PriceDifference, sp.DAYS\n"
-                          "					FROM FoundInfo AS f, StockInformation AS si, StockPerformance AS sp\n"
-                          "					WHERE f.TICKER = (%s) AND si.TICKER = (%s) AND sp.TICKER = (%s)",
-                          ticker, ticker, ticker)
+    result = conn.execute("SELECT si.LastPrice, S.SOURCE, si.TimesMentioned, sp.OverallDifference, sp.DaysSinceLastUpdate\n"
+                          "					FROM StockInformation AS si, StockPerformance AS sp, Source as S\n"
+                          "					WHERE si.TICKER = (%s) AND sp.TICKER = (%s) and S.id = si.SourceID",
+                          ticker, ticker)
     for row in result:
-        return ("Stock Price, Source, Times Mentioned, Price Difference, Days In Current Trend\n" + str(row))
+        return ("Stock Price, Source, Times Mentioned, Price Difference, Days Since Last Update\n" + str(row))
 
 
 def getTickerList():
     tickerList = []
-    list = conn.execute("SELECT TICKER FROM JimCramerStocks.FoundInfo;")
+    list = conn.execute("SELECT TICKER FROM JimCramerStocks.StockInformation;")
     for ticker in list:
 
         tickerList.append(str(ticker)[2:-3])
     return tickerList
 
+#print getTickerList()
+
+#all_stock_into('$AAPL')
