@@ -16,7 +16,6 @@ settings = {
 conn = create_engine('mysql://{0[userName]}:{0[password]}@{0[serverName]}:{0[portNumber]}/{0[dbName]}'.format(settings))
 # Connect to the database
 
-
 def all_stock_into(ticker):
     result = conn.execute("SELECT si.LastPrice, S.SOURCE, si.TimesMentioned, sp.OverallDifference, sp.DaysSinceLastUpdate\n"
                           "					FROM StockInformation AS si, StockPerformance AS sp, Source as S\n"
@@ -34,6 +33,14 @@ def getTickerList():
         tickerList.append(str(ticker)[2:-3])
     return tickerList
 
-#print getTickerList()
+def getSourceList():
+    sourceList = []
+    list = conn.execute("SELECT source FROM JimCramerStocks.Source;")
+    for source in list:
+        sourceList.append('@' + str(source)[2:-10])
+    sourceList.remove('@')
+    return sourceList
 
+#print getTickerList()
+#print getSourceList()
 #all_stock_into('$AAPL')

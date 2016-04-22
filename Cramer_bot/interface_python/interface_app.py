@@ -28,27 +28,31 @@ class ListBoxChoice(object):
         self.changingFame = Frame(self.modalPane)
         self.changingFame.pack(expand=TRUE)
 
-        buttonFrame = Frame(self.modalPane)
-        buttonFrame.pack(side=BOTTOM)
+        self.buttons()
 
-        chooseButton = Button(buttonFrame, text="Choose", command=self._choose)
+
+
+    def buttons(self):
+        self.buttonFrame = Frame(self.modalPane)
+        self.buttonFrame.pack(side=BOTTOM)
+
+        chooseButton = Button(self.buttonFrame, text="Choose", command=self._choose)
         chooseButton.pack()
 
-        createButton = Button(buttonFrame, text="Create", command=self._create)
+        createButton = Button(self.buttonFrame, text="Create", command=self._create)
         createButton.pack()
 
-        modifyButton = Button(buttonFrame, text="Modify", command=self._modify)
+        modifyButton = Button(self.buttonFrame, text="Modify", command=self._modify)
         modifyButton.pack()
 
-        autoButton = Button(buttonFrame, text="Auto Update",command=self.autoChangeEntry)
+        autoButton = Button(self.buttonFrame, text="Auto Update",command=self.autoChangeEntry)
         autoButton.pack()
 
-        delButton = Button(buttonFrame, text="Delete", command=self._deleteStock)
+        delButton = Button(self.buttonFrame, text="Delete", command=self._deleteStock)
         delButton.pack()
 
-        cancelButton = Button(buttonFrame, text="Quit", command=self._cancel)
+        cancelButton = Button(self.buttonFrame, text="Quit", command=self._cancel)
         cancelButton.pack()
-
 
     def resetlist(self):
         self.listFrame = Frame(self.modalPane)
@@ -69,11 +73,35 @@ class ListBoxChoice(object):
         for item in self.list:
             self.listBox.insert(END, item)
 
+    def resetSourceList(self):
+        self.listFrame.pack_forget()
+        self.listFrame = Frame(self.modalPane)
+        self.listFrame.pack(side=TOP, expand=TRUE, padx=30, pady=30)
+
+        self.scrollBar = Scrollbar(self.listFrame)
+        self.scrollBar.pack(side=LEFT, fill=Y)
+
+        self.listBox = Listbox(self.listFrame, selectmode=SINGLE)
+        self.listBox.pack(side=LEFT, fill=Y)
+
+        self.scrollBar.config(command=self.listBox.yview)
+        self.listBox.config(yscrollcommand=self.scrollBar.set)
+
+
+
+        self.list = read.getSourceList()
+        self.list.sort()
+
+        for item in self.list:
+            self.listBox.insert(END, item)
+
+
     def cleanFrame(self):
         try:
             self.changingFame.pack_forget()
             self.changingFame = Frame(self.modalPane)
             self.changingFame.pack(expand=TRUE, padx=10, pady=10)
+            self.value = None
         except:
             pass
 
@@ -117,7 +145,6 @@ class ListBoxChoice(object):
 
     def _deleteStock(self):
         self.cleanFrame()
-        #self.changingText.pack_forget()
         firstIndex = self.listBox.curselection()[0]
         self.value = self.list[int(firstIndex)]
         val1 = self.value
@@ -149,17 +176,50 @@ class ListBoxChoice(object):
         if self.priceChange.get():
             update.user_update(ticker=self.value,price=float(self.priceChange.get()))
 
+
+
+    def autoChange(self):
+        try:
+            self.cleanFrame()
+            firstIndex = self.listBox.curselection()[0]
+            self.value = self.list[int(firstIndex)]
+            self.text = str(self.value)
+            self.changingText = Label(self.changingFame, text=self.text)
+            self.changingText.pack(in_=self.changingFame)
+            self.source2Button = Button(self.changingFame, text="Update2 Source", command=self.updateSource)
+            self.source2Button.pack(side=BOTTOM)
+            firstIndex = self.listBox.curselection()[0]
+            self.value = self.list[int(firstIndex)]
+            print('worked')
+
+        except IndexError:
+            self.value = None
+            print('didn')
+
+    def updateSource(self):
+        try:
+            self.cleanFrame()
+            firstIndex = self.listBox.curselection()[0]
+            self.value = self.list[int(firstIndex)]
+            update.auto_update(self.value)
+            self.listFrame.pack_forget()
+            self.resetlist()
+            self.buttonFrame.pack_forget()
+            self.buttons()
+        except IndexError:
+            self.value = None
+
+
     def autoChangeEntry(self):
-        self.cleanFrame()
-        update.auto_update()
-        self.listFrame.pack_forget()
-        self.resetlist()
+        self.resetSourceList()
+        self.buttonFrame.pack_forget()
+        self.buttonFrame = Frame(self.modalPane)
+        self.buttonFrame.pack(side=BOTTOM)
+        chooseButton = Button(self.buttonFrame, text="Choose", command=self.updateSource)
+        chooseButton.pack()
 
     def returnValue(self):
        return self.master.wait_window(self.modalPane)
-
-
-
 
 if __name__ == '__main__':
 

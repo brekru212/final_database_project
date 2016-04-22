@@ -2,27 +2,25 @@ import tweepy
 from tweepy import OAuthHandler
 import csv
 from tweet_csv_converter import run
-import time
-#from Cramer_bot.get_stocks import json_stock_info
 
-
-consumer_key = 'nope'
-consumer_secret = 'nope'
-access_token = 'nope'
-access_secret = 'nope'
+consumer_key = ''
+consumer_secret = ''
+access_token = ''
+access_secret = ''
 
 auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
 
 api = tweepy.API(auth)
 
-
-
 def get_all_tweets(screen_name):
 
     #Twitter only allows access to a users most recent 3240 tweets with this method
 
-    #authorize twitter, initialize tweepy
+    csvfile = open('%s_tweets.csv' % screen_name[1:], 'w')
+    fieldnames = ['tweet_id', 'date', 'tweet_text']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
 
     #initialize a list to hold all the tweepy Tweets
     alltweets = []
@@ -44,17 +42,11 @@ def get_all_tweets(screen_name):
 
         #all subsiquent requests use the max_id param to prevent duplicates
         new_tweets = api.user_timeline(screen_name = screen_name,count=200,max_id=oldest)
-        '''
         for tweet in new_tweets:
-            if '$' not in tweet.text:
-                new_tweets.remove(tweet)
+            writer.writerow({'tweet_id':tweet.id_str,
+                            'date':tweet.created_at,
+                            'tweet_text':tweet.text.encode('utf-8')})
 
-            else:
-                text = tweet.text.split()
-                indices = [i for i, s in enumerate(text) if '$' in s]
-                stock = text.get(indices)
-                json_stock_info(stock)
-        '''
         #save most recent tweets
         alltweets.extend(new_tweets)
 
@@ -62,34 +54,18 @@ def get_all_tweets(screen_name):
         oldest = alltweets[-1].id - 1
 
         print("...%s tweets downloaded so far" % (len(alltweets)))
-
-
-    #write the csv
-    csvfile = open('%s_tweets.csv' % screen_name[1:], 'w')
-    fieldnames = ['tweet_id', 'date', 'tweet_text']
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-    writer.writeheader()
-    for tweet in alltweets:
-        writer.writerow({'tweet_id':tweet.id_str,
-                        'date':tweet.created_at,
-                        'tweet_text':tweet.text.encode('utf-8')})
     csvfile.close()
     return('%s_tweets.csv' % screen_name[1:])
 
-list_of_screenNames = []
-    #,, , ,
-     #                  ,'@SquawkAlley',
-      #                 '@SquawkCNBC', '@SquawkStreet', '@StockTwits']'@Benzinga'
-#
-# '@kaylatausche''@davidfaber' '@jimcramer', 4/13
-# '@MelissaLeeCNBC', '@ScottapnerCNBC', '@CNBCClosingBell', '@CNBCFastMoney', '@HalftimeReport', 4/11
-# '@PowerLunch',4/8
-# '@MadMoney' 4/5
+#@jimcramer 4/20
+      #                 , , '@StockTwits']'@Benzinga'
+#'@MadMoneyOnCNBC'. '@SquawkAlley', '@Squawkstreet', '@SquawkCNBC' '@CNBCClosingBell', '@CNBCFastMoney','@HalftimeReport' 4/18
+# '@kaylatausche''@davidfaber' , 4/13
+# '@MelissaLeeCNBC', '@ScottapnerCNBC',  , , 4/11
 
-for sname in list_of_screenNames:
-    csvf = get_all_tweets(screen_name=sname)
+def run_tweet_to_table(source):
+    csvf = get_all_tweets(screen_name=source)
     run(csvf)
     print('DONE')
-    time.sleep(5)
 
+#run_tweet_to_table('@CNBCClosingBell')

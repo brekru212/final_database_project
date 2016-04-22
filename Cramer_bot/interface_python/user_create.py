@@ -1,15 +1,9 @@
 #user inputs ticker and it creates a new entry into FoundInfo table
 
-import json
-import re
-import time
-import datetime
-import yahoo_finance
-import signal
 from sqlalchemy import *
 
-username = "nope"
-password = "nope"
+username = "root"
+password = "DelPotro06"
 dbn = "JimCramerStocks"
 # Connection settings
 settings = {
