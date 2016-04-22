@@ -1,6 +1,6 @@
-
+import os
 import populate_stockperformance as dpc
-
+from Cramer_bot.data_python_collection.get_tweets import run_tweet_to_table
 from sqlalchemy import *
 
 username = "nope"
@@ -19,53 +19,51 @@ conn = create_engine('mysql://{0[userName]}:{0[password]}@{0[serverName]}:{0[por
 # Connect to the database
 
 #auto is user puts in a ticker and it automatically updates across
-def auto_update():
-    conn.execute("""INSERT INTO StockInformation(TICKER, LastPrice, TimesMentioned, DateModified)
-    select distinct(re.ticker) as TICKER, Price as LastPrice, count(ticker) as coun, max(Dates) as DateModified
-    From ReporterEntries as re
-    right outer join
-(select distinct(ticker) as tick, count(ticker) as coun, max(dates) as da
-from ReporterEntries
-group by tick) as a
-on re.dates = a.da and a.coun = coun
-where a.da is not null
-group by re.ticker, re.price
+def auto_update(source):
+    print 'worked'
+    print source
+    run_tweet_to_table(source)
+
+    conn.execute("""
+   INSERT INTO StockPerformance (TICKER, OverallDifference, DaysSinceLastUpdate)
+SELECT tt.ticker, (tt.maxPrice - tt.minPRICE) as OverallDifference, datediff(now(), tt.dmax)  as DaysSinceLastUpdate
+FROM test_table as tt, StockInformation as si
 ON DUPLICATE KEY UPDATE
-    LastPrice = LastPrice,
-    DateModified = DateModified,
-    TimesMentioned = (StockInformation.TimesMentioned + 1);
+    OverallDifference = tt.maxPrice - si.LastPrice,
+    DaysSinceLastUpdate = datediff(now(), tt.dmax);
     """)
     conn.execute("""
-insert into FoundInfo
-SELECT
-    SI.TICKER AS TICKER,
-
-    SI.LastPrice AS LastPrice,
-    sou.source as SOURCE,
-    min(re.da) AS DateAdded,
-    SI.DateModified AS DateModified
-FROM
-    StockInformation AS SI
-        LEFT OUTER JOIN
-    (SELECT DISTINCT
-        (ticker) AS tick, MIN(dates) AS da
-    FROM
-        ReporterEntries
-    GROUP BY ReporterEntries.TICKER) AS re ON SI.TICKER = re.tick
-        LEFT OUTER JOIN
-    (SELECT DISTINCT
-        (ticker) AS tick, source, MAX(dates) AS da
-    FROM
-        ReporterEntries
-    GROUP BY tick, source) AS sou ON SI.ticker = sou.tick and SI.DateModified = sou.da
-GROUP BY SI.TICKER , SI.DateModified , SI.LastPrice ,sou.source, re.da
+INSERT INTO StockInformation (TICKER, LastPrice, TimesMentioned, LastUpdate, FirstDate, SourceID)
+SELECT distinct(tt.ticker) as TICKER, tv.PRICE as LastPrice , tt.coun as TimesMentioned, tt.dmax as LastUpdate, tt.dmin as FirstDate, tv.SourceID
+FROM test_table as tt JOIN entries as tv ON tt.ticker = tv.ticker
+WHERE tt.dmax = tv.dates
 ON DUPLICATE KEY UPDATE
-    LastPrice = LastPrice,
-    SOURCE = SOURCE,
-    DateModified = DateModified;
+    LastPrice = tt.maxPrice,
+    LastUpdate = tt.dmax,
+    TimesMentioned = TimesMentioned + tt.coun;
     """)
-    dpc.update_StockPerformance()
-
+    #
+    conn.execute("""
+    UPDATE
+    Source AS s
+    LEFT JOIN (
+        SELECT
+            SourceID,
+            count(SourceID) as numTweets
+        FROM
+            entries
+        GROUP BY
+            SourceID
+    ) AS m ON
+        m.SourceID = s.id
+SET
+    s.numTweets = m.numTweets
+WHERE
+     s.SOURCE = '%s';
+    """ %(source[1:] + '_tweets'))
+    conn.execute("DROP TABLE TempEntries")
+    conn.execute("DROP TABLE test_table")
+    os.remove(source[1:] + '_tweets.csv')
 
 
 #user is user puts in a ticker and price it updates in found info
@@ -84,3 +82,5 @@ def user_update(ticker, price):
 
 
 #user_update('test', 20)
+
+#auto_update('@CNBCFastMoney')

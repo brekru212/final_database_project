@@ -34,6 +34,14 @@ def getTickerList():
         tickerList.append(str(ticker)[2:-3])
     return tickerList
 
-#print getTickerList()
+def getSourceList():
+    sourceList = []
+    list = conn.execute("SELECT source FROM JimCramerStocks.Source;")
+    for source in list:
+        sourceList.append('@' + str(source)[2:-10])
+    sourceList.remove('@')
+    return sourceList
 
+#print getTickerList()
+#print getSourceList()
 #all_stock_into('$AAPL')

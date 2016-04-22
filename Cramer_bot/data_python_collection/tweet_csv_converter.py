@@ -1,5 +1,4 @@
 import csv
-import json
 import re
 import time
 import datetime
@@ -7,7 +6,6 @@ import yahoo_finance
 import signal
 
 
-#import @JimCramer_tweets.csv
 
 
 from sqlalchemy import *
@@ -26,8 +24,8 @@ settings = {
 
 
 
-def create_table(csv_file):
-    tableName = csv_file[:-4]
+def create_entries_table(csv_file):
+    tableName = csv_file
     metadata = MetaData(conn)
     tablecreate = Table(tableName, metadata,
                      Column('DATES', VARCHAR(45), primary_key= True),
@@ -37,35 +35,25 @@ def create_table(csv_file):
     tablecreate.create()
     return(tablecreate)
 
+def create_test_table(csv_file):
+    tableName = csv_file
+    metadata = MetaData(conn)
+    tablecreate = Table(tableName, metadata,
+                     Column('TICKER', VARCHAR(45), primary_key= True),
+                     Column('coun', INT),
+                     Column('minPRICE', FLOAT),
+                     Column('maxPRICE', FLOAT, primary_key= True),
+                     Column('dmax', VARCHAR(45), primary_key= True),
+                     Column('dmin', VARCHAR(45)))
+    tablecreate.create()
+    return(tablecreate)
 
 
 
 
 # Connect to the database
 conn = create_engine('mysql://{0[userName]}:{0[password]}@{0[serverName]}:{0[portNumber]}/{0[dbName]}'.format(settings))
-#print('Connected to database')
-
-''''
-tableN = Table('FoundInfo', MetaData(conn),
-                     Column('DATES', VARCHAR(45), primary_key= True),
-                     Column('TICKER', VARCHAR(45)),
-                     Column('PRICE', FLOAT),
-                     Column('SOURCE', VARCHAR(45)))
-
-
-'''
-'''
-# Create a table
-create_string = """
-    CREATE TABLE {} (
-    TICKER BLOB NOT NULL,
-    DATES TIMESTAMP NOT NULL,
-    PRICE DECIMAL(7,2) NOT NULL,
-    PRIMARY KEY (DATES))
-    """.format(tableName)
-cur.execute(create_string)
-print('Created a table')
-'''
+print('Connected to database')
 
 class Exception(Exception):   # Custom exception class
     pass
@@ -76,6 +64,8 @@ def timeout_handler(signum, frame):   # Custom signal handler
 class KeyError(KeyError):
     pass
 
+showTable = create_entries_table('TempEntries')
+info_table= create_test_table('test_table')
 
 def TickerFixer(ticker):
     after = False
@@ -95,27 +85,19 @@ tweet_json = {"date": "",
 
 def csv_convert(csvFile):
     CSVfile = open(csvFile, 'r')
-
-    #newcsvFILE = open('stocks_tweets.csv', 'w')
     fieldnames = ("tweet_id", "date", "tweet_text")
-    #csvWriter = csv.DictWriter(newcsvFILE, fieldnames=["date","stock","price"])
-    #csvWriter.writeheader()
     read = csv.DictReader(CSVfile, fieldnames)
     next(read, None)
-    tableN = create_table(csvFile)
     for row in read:
-        #print(row)
         del row["tweet_id"]
         text = row["tweet_text"]
-        #print(text)
-        #text.split()
+
         wordList = re.sub("[^\S]", " ",  text).split()
-        #print(wordList)
         indices = [i for i, s in enumerate(wordList) if '$' in s]
-        #print(indices)
         if indices:
             stock = wordList.pop(indices.pop(0))
             stock = TickerFixer(stock)
+            print(stock)
             dateString = row["date"]
             datestr = dateString[0:4] + " " + \
                       dateString[5:7] + " " + \
@@ -124,9 +106,7 @@ def csv_convert(csvFile):
                       dateString[14:16] + " " + \
                       dateString[17:19]
             dateS = datetime.datetime.fromtimestamp(time.mktime(time.strptime(datestr, "%Y %m %d %H %M %S")))
-           # date = time.strptime(row["date"], "%y-%m-%d %H:%M%S")
             if (stock == "$") or (stock == "$$"):
-                print("skip")
                 continue
             if stock.count("$") > 1:
                 #maybe not working?
@@ -134,64 +114,44 @@ def csv_convert(csvFile):
                 stock = stock[:stock[1:].find("$") + 1]
                 tweet_json["date"] = time.strptime(datestr, "%Y %m %d %H %M %S")
                 tweet_json["stock"] = secondStock
-                #json.dump(tweet_json, jsonFile)
-                #jsonFile.write('\n')
-            tweet_json["date"] = time.strptime(datestr, "%Y %m %d %H %M %S")
             tweet_json["stock"] = stock
             print(stock)
             if (stock == "$") or (stock == "$$"):
-                print("skip")
                 continue
             signal.signal(signal.SIGALRM, timeout_handler)
             signal.alarm(30)
             try:
                 yahooStock = yahoo_finance.Share(stock[1:])
-                datesk = dateS.strftime("%Y-%m-%d")
-                price = yahooStock.get_historical(start_date=datesk, end_date=datesk)
+                price = None
                 while(not price):
-                    dateS = dateS - datetime.timedelta(days=1)
                     datesk = dateS.strftime("%Y-%m-%d")
                     price = yahooStock.get_historical(start_date=datesk, end_date=datesk)
-                print(price)
-                print(dateS.strftime("%Y-%m-%d"))
-           # tweet_json["price"] = (yahooStock.get_historical(start_date=dateS.strftime("%Y-%m-%d"), end_date=dateS.strftime("%Y-%m-%d")))[0]['Close']
+                    dateS = dateS - datetime.timedelta(days=1)
                 tweet_json["price"] = float(price[0]['Close'])
                 tweet_json["date"] = dateS.strftime("%Y-%m-%d %H:%M:%S")
-                #csvWriter.writerow(tweet_json)
-                #json.dump(tweet_json, jsonFile)
-                #jsonFile.write(',\n')
-                insert_string = tableN.insert().prefix_with("IGNORE")
-                   # ('INSERT INTO {0} (TICKER, DATES, PRICE) VALUES ({1}, {2}, {3})'.format(
-                    #dbn + '.' + tableName, tweet_json["stock"], tweet_json["date"], tweet_json["price"]))
-                conn.execute(insert_string, DATES=tweet_json["date"],TICKER=tweet_json["stock"],
+                insert_stringShow = showTable.insert().prefix_with("IGNORE")
+                conn.execute(insert_stringShow, DATES=tweet_json["date"],TICKER=tweet_json["stock"],
                              PRICE=tweet_json["price"],
                              SOURCE=csvFile[:-4])
+                insert_strint = info_table.insert().prefix_with("IGNORE")
+                conn.execute(insert_strint, TICKER=tweet_json["stock"] , coun=1,
+                             minPRICE=tweet_json["price"], maxPRICE =tweet_json["price"], dmax=tweet_json["date"],
+                 dmin=tweet_json["date"])
             except Exception, KeyError:
                 pass
 
-            '''
-            if dateS.weekday() > 4:
-                dateS = dateS - datetime.timedelta(days=dateS.weekday()-4)
-            if dateS in holidays.UnitedStates():
-                dateS = dateS - datetime.timedelta(days=dateS.weekday()-1)
-            '''
-
-            #print(tweet_json)
-    #print(wordList)
-        #tweet_json["date"] = row["date"]
-        #indices = [i for i, s in enumerate(text) if '$' in s]
-        #stock = text.get(indices)
-        #tweet_json["stock"] = stock
-        #print(tweet_json)
-
-#csv_convert(@JimCramer_tweets.csv)
-
-        #json.dump(tweet_json, jsonFile)
-        #jsonFile.write('\n')
-
 def run(csv_file):
     csv_convert(csv_file)
+    conn.execute("""
+                INSERT IGNORE INTO entries (DATES, TICKER, PRICE, SourceID)
+                SELECT DATES, TICKER, PRICE, s.id
+                FROM TempEntries, Source as s
+                WHERE TempEntries.source = s.source;
+                            """)
 
+
+
+#run('CNBCClosingBell_tweets.csv')
 #,, , ,
      #
       #                 '@SquawkCNBC', '@SquawkStreet', '@StockTwits']'@Benzinga'
@@ -201,49 +161,15 @@ def run(csv_file):
 # '@PowerLunch',4/8
 # '@MadMoney' 4/5
 
-
-list_of_screenNames = ['ScottWapnerCNBC_tweets.csv']#, , ',
+'''
+list_of_screenNames = []#['ScottWapnerCNBC_tweets.csv']#, , ',
                        #, ]
 #'SquawkAlley_tweets.csv',
  #                      'SquawkStreet_tweets.csv','CNBCClosingBell_tweets.csv','CNBCFastMoney_tweets.csv',
   #                     'HalftimeReport_tweets.csv','PowerLunch_tweets.csv','MadMoney_tweets.csv']
 
-for sname in list_of_screenNames:
-    run(sname)
-    print("Done" + sname)
-    print("Done" + sname)
-    print("Done" + sname)
-    print("Done" + sname)
-    print("Done" + sname)
-    print("Done" + sname)
-    print("Done" + sname)
-    print("Done" + sname)
-    print("Done" + sname)
-
 
 '''
-    stockList = list(ticker)
-    leng = len(stockList)
-    for ch in stockList:
-        i = stockList.index(ch)
-        if (ch != "$" and not ch.isupper()):
-            stockList.pop(i)
-    return stockList
 
 
-
-
-
-print(TickerFixer("$TSLA"))
-print(TickerFixer("$75"))
-print(TickerFixer("own,.$AGN."))
-print(TickerFixer("$AGN/$PFE"))
-print(TickerFixer("do--$PFE-$AGN"))
-
-"$YHOO.."
-"$Z??"
-"$WFC--actionalertsplus.com"
-'''
-
-#cur.close()
-#conn.close()
+#run('CNBCClosingBell_tweets.csv')

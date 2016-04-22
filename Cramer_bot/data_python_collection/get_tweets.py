@@ -2,14 +2,13 @@ import tweepy
 from tweepy import OAuthHandler
 import csv
 from tweet_csv_converter import run
-import time
-#from Cramer_bot.get_stocks import json_stock_info
 
 
-consumer_key = 'nope'
-consumer_secret = 'nope'
-access_token = 'nope'
-access_secret = 'nope'
+
+consumer_key = '1R44siZpuxAEItrLGIKYp8Uvm'
+consumer_secret = 'X5C4X9FPFygKXA8ATgu337mwUSa7vAtj6Q5eapTSA9K3gJ2yRb'
+access_token = '706564673349427201-WjPUbv8NbqPbngJ12LmxsB7CA55st3x'
+access_secret = 'NLWAqkmy8GOaK6SkvGPVM3y0oSEsqs4lCfGPT5qg3Bw29'
 
 auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
@@ -44,17 +43,7 @@ def get_all_tweets(screen_name):
 
         #all subsiquent requests use the max_id param to prevent duplicates
         new_tweets = api.user_timeline(screen_name = screen_name,count=200,max_id=oldest)
-        '''
-        for tweet in new_tweets:
-            if '$' not in tweet.text:
-                new_tweets.remove(tweet)
 
-            else:
-                text = tweet.text.split()
-                indices = [i for i, s in enumerate(text) if '$' in s]
-                stock = text.get(indices)
-                json_stock_info(stock)
-        '''
         #save most recent tweets
         alltweets.extend(new_tweets)
 
@@ -77,19 +66,17 @@ def get_all_tweets(screen_name):
     csvfile.close()
     return('%s_tweets.csv' % screen_name[1:])
 
-list_of_screenNames = []
-    #,, , ,
-     #                  ,'@SquawkAlley',
-      #                 '@SquawkCNBC', '@SquawkStreet', '@StockTwits']'@Benzinga'
-#
-# '@kaylatausche''@davidfaber' '@jimcramer', 4/13
-# '@MelissaLeeCNBC', '@ScottapnerCNBC', '@CNBCClosingBell', '@CNBCFastMoney', '@HalftimeReport', 4/11
-# '@PowerLunch',4/8
-# '@MadMoney' 4/5
+#list_of_screenNames = ['@jimcramer']
 
-for sname in list_of_screenNames:
-    csvf = get_all_tweets(screen_name=sname)
+#@jimcramer 4/20
+      #                 , , '@StockTwits']'@Benzinga'
+#'@MadMoneyOnCNBC'. '@SquawkAlley', '@Squawkstreet', '@SquawkCNBC' '@CNBCClosingBell', '@CNBCFastMoney','@HalftimeReport' 4/18
+# '@kaylatausche''@davidfaber' , 4/13
+# '@MelissaLeeCNBC', '@ScottapnerCNBC',  , , 4/11
+
+def run_tweet_to_table(source):
+    csvf = get_all_tweets(screen_name=source)
     run(csvf)
     print('DONE')
-    time.sleep(5)
 
+run_tweet_to_table('@CNBCClosingBell')
