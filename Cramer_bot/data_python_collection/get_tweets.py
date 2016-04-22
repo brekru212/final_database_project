@@ -5,10 +5,10 @@ from tweet_csv_converter import run
 
 
 
-consumer_key = '1R44siZpuxAEItrLGIKYp8Uvm'
-consumer_secret = 'X5C4X9FPFygKXA8ATgu337mwUSa7vAtj6Q5eapTSA9K3gJ2yRb'
-access_token = '706564673349427201-WjPUbv8NbqPbngJ12LmxsB7CA55st3x'
-access_secret = 'NLWAqkmy8GOaK6SkvGPVM3y0oSEsqs4lCfGPT5qg3Bw29'
+consumer_key = ''
+consumer_secret = ''
+access_token = ''
+access_secret = ''
 
 auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
@@ -21,7 +21,10 @@ def get_all_tweets(screen_name):
 
     #Twitter only allows access to a users most recent 3240 tweets with this method
 
-    #authorize twitter, initialize tweepy
+    csvfile = open('%s_tweets.csv' % screen_name[1:], 'w')
+    fieldnames = ['tweet_id', 'date', 'tweet_text']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
 
     #initialize a list to hold all the tweepy Tweets
     alltweets = []
@@ -43,6 +46,10 @@ def get_all_tweets(screen_name):
 
         #all subsiquent requests use the max_id param to prevent duplicates
         new_tweets = api.user_timeline(screen_name = screen_name,count=200,max_id=oldest)
+        for tweet in new_tweets:
+            writer.writerow({'tweet_id':tweet.id_str,
+                            'date':tweet.created_at,
+                            'tweet_text':tweet.text.encode('utf-8')})
 
         #save most recent tweets
         alltweets.extend(new_tweets)
@@ -51,22 +58,8 @@ def get_all_tweets(screen_name):
         oldest = alltweets[-1].id - 1
 
         print("...%s tweets downloaded so far" % (len(alltweets)))
-
-
-    #write the csv
-    csvfile = open('%s_tweets.csv' % screen_name[1:], 'w')
-    fieldnames = ['tweet_id', 'date', 'tweet_text']
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-    writer.writeheader()
-    for tweet in alltweets:
-        writer.writerow({'tweet_id':tweet.id_str,
-                        'date':tweet.created_at,
-                        'tweet_text':tweet.text.encode('utf-8')})
     csvfile.close()
     return('%s_tweets.csv' % screen_name[1:])
-
-#list_of_screenNames = ['@jimcramer']
 
 #@jimcramer 4/20
       #                 , , '@StockTwits']'@Benzinga'
@@ -79,4 +72,4 @@ def run_tweet_to_table(source):
     run(csvf)
     print('DONE')
 
-run_tweet_to_table('@CNBCClosingBell')
+#run_tweet_to_table('@CNBCClosingBell')

@@ -49,8 +49,6 @@ def create_test_table(csv_file):
     return(tablecreate)
 
 
-
-
 # Connect to the database
 conn = create_engine('mysql://{0[userName]}:{0[password]}@{0[serverName]}:{0[portNumber]}/{0[dbName]}'.format(settings))
 print('Connected to database')
@@ -148,28 +146,3 @@ def run(csv_file):
                 FROM TempEntries, Source as s
                 WHERE TempEntries.source = s.source;
                             """)
-
-
-
-#run('CNBCClosingBell_tweets.csv')
-#,, , ,
-     #
-      #                 '@SquawkCNBC', '@SquawkStreet', '@StockTwits']'@Benzinga'
-#
-# '@kaylatausche''@davidfaber' '@jimcramer', 4/13
-# '@MelissaLeeCNBC', '@ScottapnerCNBC', '@CNBCClosingBell', '@CNBCFastMoney', '@HalftimeReport', 4/11
-# '@PowerLunch',4/8
-# '@MadMoney' 4/5
-
-'''
-list_of_screenNames = []#['ScottWapnerCNBC_tweets.csv']#, , ',
-                       #, ]
-#'SquawkAlley_tweets.csv',
- #                      'SquawkStreet_tweets.csv','CNBCClosingBell_tweets.csv','CNBCFastMoney_tweets.csv',
-  #                     'HalftimeReport_tweets.csv','PowerLunch_tweets.csv','MadMoney_tweets.csv']
-
-
-'''
-
-
-#run('CNBCClosingBell_tweets.csv')

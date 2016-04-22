@@ -65,14 +65,12 @@ WHERE
     conn.execute("DROP TABLE test_table")
     os.remove(source[1:] + '_tweets.csv')
 
-
 #user is user puts in a ticker and price it updates in found info
 def user_update(ticker, price):
     lastPrice = conn.execute("SELECT lastPrice FROM StockInformation WHERE TICKER = (%s)", ticker)
     for pr in lastPrice:
         # should only be one entry
         lPrice = str(pr)[1:-2]
-
     priceDiff = price - float(lPrice)
     conn.execute("UPDATE StockInformation SET StockInformation.lastPrice = (%s), "
                  "StockInformation.timesMentioned = StockInformation.timesMentioned+1, "
