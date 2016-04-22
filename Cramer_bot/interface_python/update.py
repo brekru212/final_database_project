@@ -20,10 +20,7 @@ conn = create_engine('mysql://{0[userName]}:{0[password]}@{0[serverName]}:{0[por
 
 #auto is user puts in a ticker and it automatically updates across
 def auto_update(source):
-    print 'worked'
-    print source
     run_tweet_to_table(source)
-
     conn.execute("""
    INSERT INTO StockPerformance (TICKER, OverallDifference, DaysSinceLastUpdate)
 SELECT tt.ticker, (tt.maxPrice - tt.minPRICE) as OverallDifference, datediff(now(), tt.dmax)  as DaysSinceLastUpdate

@@ -5,9 +5,6 @@ import datetime
 import yahoo_finance
 import signal
 
-
-
-
 from sqlalchemy import *
 
 username = 'nope'
@@ -21,8 +18,6 @@ settings = {
     'portNumber': 3306,           # The port of the MySQL server (default is 3306)
     'dbName': dbn,             # The name of the database we are testing with (this default is installed with MySQL)
 }
-
-
 
 def create_entries_table(csv_file):
     tableName = csv_file

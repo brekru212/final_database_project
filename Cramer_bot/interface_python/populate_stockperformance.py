@@ -6,8 +6,8 @@ import yahoo_finance
 
 from sqlalchemy import *
 
-username = "root"
-password = "DelPotro06"
+username = "nope"
+password = "nope"
 dbn = "JimCramerStocks"
 # Connection settings
 settings = {

@@ -3,8 +3,6 @@ from tweepy import OAuthHandler
 import csv
 from tweet_csv_converter import run
 
-
-
 consumer_key = ''
 consumer_secret = ''
 access_token = ''
@@ -14,8 +12,6 @@ auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
 
 api = tweepy.API(auth)
-
-
 
 def get_all_tweets(screen_name):
 

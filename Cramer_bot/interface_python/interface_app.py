@@ -221,9 +221,6 @@ class ListBoxChoice(object):
     def returnValue(self):
        return self.master.wait_window(self.modalPane)
 
-
-
-
 if __name__ == '__main__':
 
     root = Tk()
