@@ -1,45 +1,33 @@
 import os
-import populate_stockperformance as dpc
 from Cramer_bot.data_python_collection.get_tweets import run_tweet_to_table
-from sqlalchemy import *
+from Cramer_bot.data_python_collection.conn_auth import get_dbConn
 
-username = "nope"
-password = "nope"
-dbn = "JimCramerStocks"
-# Connection settings
-settings = {
-    'userName': username,           # The name of the MySQL account to use (or empty for anonymous)
-    'password': password,           # The password for the MySQL account (or empty for anonymous)
-    'serverName': "localhost",    # The name of the computer running MySQL
-    'portNumber': 3306,           # The port of the MySQL server (default is 3306)
-    'dbName': dbn,             # The name of the database we are testing with (this default is installed with MySQL)
-}
-
-conn = create_engine('mysql://{0[userName]}:{0[password]}@{0[serverName]}:{0[portNumber]}/{0[dbName]}'.format(settings))
-# Connect to the database
+conn = get_dbConn()
 
 #auto is user puts in a ticker and it automatically updates across
 def auto_update(source):
-    run_tweet_to_table(source)
-    conn.execute("""
-   INSERT INTO StockPerformance (TICKER, OverallDifference, DaysSinceLastUpdate)
-SELECT tt.ticker, (tt.maxPrice - tt.minPRICE) as OverallDifference, datediff(now(), tt.dmax)  as DaysSinceLastUpdate
-FROM test_table as tt, StockInformation as si
-ON DUPLICATE KEY UPDATE
-    OverallDifference = tt.maxPrice - si.LastPrice,
-    DaysSinceLastUpdate = datediff(now(), tt.dmax);
-    """)
+    run_tweet_to_table(source, conn)
+    print('done with inserting into entry table')
     conn.execute("""
 INSERT INTO StockInformation (TICKER, LastPrice, TimesMentioned, LastUpdate, FirstDate, SourceID)
 SELECT distinct(tt.ticker) as TICKER, tv.PRICE as LastPrice , tt.coun as TimesMentioned, tt.dmax as LastUpdate, tt.dmin as FirstDate, tv.SourceID
 FROM test_table as tt JOIN entries as tv ON tt.ticker = tv.ticker
 WHERE tt.dmax = tv.dates
 ON DUPLICATE KEY UPDATE
-    LastPrice = tt.maxPrice,
-    LastUpdate = tt.dmax,
+    LastPrice = IF(LastUpdate < tt.dmax, tt.maxPrice, LastPrice),
+    LastUpdate = IF(LastUpdate < tt.dmax, tt.dmax, LastUpdate),
     TimesMentioned = TimesMentioned + tt.coun;
     """)
-    #
+    print('done with inserting into stock info table')
+    conn.execute("""
+   INSERT INTO StockPerformance (TICKER, OverallDifference, DaysSinceLastUpdate)
+SELECT tt.ticker, (tt.maxPrice - tt.minPRICE) as OverallDifference, datediff(now(), tt.dmax)  as DaysSinceLastUpdate
+FROM test_table as tt, StockInformation as si
+ON DUPLICATE KEY UPDATE
+    OverallDifference = IF (datediff(now(), tt.dmax) < DaysSinceLastUpdate,  tt.maxPrice - tt.minPRICE, OverallDifference),
+    DaysSinceLastUpdate = IF (datediff(now(), tt.dmax) < DaysSinceLastUpdate, datediff(now(), tt.dmax), DaysSinceLastUpdate);
+    """)
+    print('done with inserting into stock perf table')
     conn.execute("""
     UPDATE
     Source AS s
@@ -77,5 +65,15 @@ def user_update(ticker, price):
 
 
 #user_update('test', 20)
+#@jimcramer 4/20
+      #                 , , '@StockTwits']'@Benzinga'
+#'@MadMoneyOnCNBC'. '@SquawkAlley', '@Squawkstreet', '@SquawkCNBC' '@CNBCClosingBell', '@CNBCFastMoney','@HalftimeReport' 4/18
+# '@kaylatausche''@davidfaber' , 4/13
+# '@MelissaLeeCNBC', '@ScottapnerCNBC'
+listSN = [ '@CNBCClosingBell', '@CNBCFastMoney', '@MadMoneyOnCNBC', '@SquawkAlley', '@Squawkstreet',
+        '@davidfaber', '@SquawkCNBC', '@HalftimeReport', '@kaylatausche','@MelissaLeeCNBC', '@kaylatausche', '@davidfaber']
+#'@kaylatausche'
 
-#auto_update('@CNBCFastMoney')
+#for x in listSN:
+ #   auto_update(x)
+
